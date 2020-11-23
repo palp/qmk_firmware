@@ -196,9 +196,7 @@ void via_qmk_rgb_matrix_set_key_color(uint8_t *value_data, uint8_t count) {
         g = *value_data++;
         b = *value_data++;
         k = *value_data++;
-        //dprintf("r: %d g: %d b: %d k1: %d k2: %d", r, g, b, k1, k2);
         if (k == 0) {
-            //dprintf("set color to %02X%02X%02X", r, g, b);
             rgb_matrix_set_color_all(r, g, b);
         }
         else
@@ -206,7 +204,6 @@ void via_qmk_rgb_matrix_set_key_color(uint8_t *value_data, uint8_t count) {
             // get position from keycode using map
             numkeys = rgb_matrix_map_keycode_to_led(k, led);
             for (i = 0; i < numkeys; i++) {
-                //dprintf("set color to %02X%02X%02X for %d @ %d\n", r, g, b, k, led[i]);
                 rgb_matrix_set_color(led[i], r, g, b);
             }
         }
