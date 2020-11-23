@@ -54,15 +54,11 @@ uint8_t rgb_matrix_map_keycode_to_led(uint8_t keycode, uint8_t *led_i) {
 #define MODS_CTRL  (get_mods() & MOD_BIT(KC_LCTL) || get_mods() & MOD_BIT(KC_RCTRL))
 #define MODS_ALT  (get_mods() & MOD_BIT(KC_LALT) || get_mods() & MOD_BIT(KC_RALT))
 
-// Set up the reverse keymaps 
-void matrix_init_user(void) {
-
-}
-
 void keyboard_post_init_user(void) {
     debug_enable=true;
     rgb_matrix_mode(1);
-    rgb_matrix_set_flags(LED_FLAG_NONE); 
+    rgb_matrix_set_flags(LED_FLAG_NONE);
+    rgb_matrix_set_color_all(255, 0, 0);
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -144,13 +140,13 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
 void raw_hid_receive(uint8_t *data, uint8_t length) {
     uint8_t *command_id   = &(data[0]);
 
-    if (*command_id == id_lighting_set_value)  
+    if (*command_id == id_lighting_set_value)
         raw_hid_receive_kb(data, length);
-    
+
    raw_hid_send(data, length);
-} 
+}
 #endif
-  
+
 void raw_hid_receive_kb(uint8_t *data, uint8_t length) {
     uint8_t *command_id   = &(data[0]);
     uint8_t *command_data = &(data[1]);
@@ -163,22 +159,36 @@ void via_qmk_rgbmatrix_set_value(uint8_t *data) {
     uint8_t *value_id   = &(data[0]);
     uint8_t *value_data = &(data[1]);
     switch (*value_id) {
-        case id_qmk_rgbmatrix_color: {
-            hid_set_color(value_data, 1);
+        case id_qmk_rgbmatrix_led_color: {
+            uint8_t ledcount = *value_data++;
+            via_qmk_rgb_matrix_set_led_color(value_data, ledcount);
             break;
         }
-        case id_qmk_rgbmatrix_color_array: {
+        case id_qmk_rgbmatrix_key_color: {
             uint8_t keycount = *value_data++;
-            hid_set_color(value_data, keycount);
+            via_qmk_rgb_matrix_set_key_color(value_data, keycount);
             break;
         }
         default: {
             break;
         }
-    }   
+    }
 }
 
-void hid_set_color(uint8_t *value_data, uint8_t count) {
+void via_qmk_rgb_matrix_set_led_color(uint8_t *value_data, uint8_t count) {
+    uint8_t r, g, b, k;
+    while (count > 0) {
+        r = *value_data++;
+        g = *value_data++;
+        b = *value_data++;
+        k = *value_data++;
+
+        rgb_matrix_set_color(k, r, g, b);
+        count--;
+    }
+}
+
+void via_qmk_rgb_matrix_set_key_color(uint8_t *value_data, uint8_t count) {
     uint8_t r, g, b, k, i, numkeys;
     uint8_t led[8];
     while (count > 0) {
