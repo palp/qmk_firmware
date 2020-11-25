@@ -50,15 +50,17 @@ uint8_t rgb_matrix_map_keycode_to_led(uint8_t keycode, uint8_t *led_i) {
     return count;
 }
 
+
+
 #define MODS_SHIFT  (get_mods() & MOD_BIT(KC_LSHIFT) || get_mods() & MOD_BIT(KC_RSHIFT))
 #define MODS_CTRL  (get_mods() & MOD_BIT(KC_LCTL) || get_mods() & MOD_BIT(KC_RCTRL))
 #define MODS_ALT  (get_mods() & MOD_BIT(KC_LALT) || get_mods() & MOD_BIT(KC_RALT))
 
 void keyboard_post_init_user(void) {
     debug_enable=true;
-    rgb_matrix_mode(1);
-    rgb_matrix_set_flags(LED_FLAG_NONE);
+    rgb_matrix_disable_noeeprom();
     rgb_matrix_set_color_all(255, 0, 0);
+    rgb_matrix_update_pwm_buffers();
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -182,10 +184,10 @@ void via_qmk_rgb_matrix_set_led_color(uint8_t *value_data, uint8_t count) {
         g = *value_data++;
         b = *value_data++;
         k = *value_data++;
-
         rgb_matrix_set_color(k, r, g, b);
         count--;
     }
+    rgb_matrix_update_pwm_buffers();
 }
 
 void via_qmk_rgb_matrix_set_key_color(uint8_t *value_data, uint8_t count) {
@@ -209,4 +211,5 @@ void via_qmk_rgb_matrix_set_key_color(uint8_t *value_data, uint8_t count) {
         }
         count--;
     }
+    rgb_matrix_update_pwm_buffers();
 }
