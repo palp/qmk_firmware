@@ -1,6 +1,5 @@
 #include "alt.h"
-#include "raw_hid.h"
-#include "via.h"
+#include "hid_lamparray.h"
 #include "config.h"
 
 enum via_qmk_rgbmatrix_lighting_value {

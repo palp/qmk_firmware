@@ -137,6 +137,16 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
     }
 }
 
+void hid_lamparray_recv(uint8_t *data, uint8_t length) {
+    while (length > 0) {
+        dprintf("%x", *(data++));
+        length--;
+    }
+}
+
+#ifdef RAW_ENABLE
+#include "raw_hid.h"
+#include "via.h"
 // HID RGB matrix control, extends the VIA protocol, but works idependently
 #ifndef VIA_ENABLE
 void raw_hid_receive(uint8_t *data, uint8_t length) {
@@ -156,6 +166,7 @@ void raw_hid_receive_kb(uint8_t *data, uint8_t length) {
     if (*command_id == id_lighting_set_value)
         via_qmk_rgbmatrix_set_value(command_data);
 }
+#endif
 
 void via_qmk_rgbmatrix_set_value(uint8_t *data) {
     uint8_t *value_id   = &(data[0]);
