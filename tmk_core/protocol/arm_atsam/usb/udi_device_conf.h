@@ -117,7 +117,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 // **********************************************************************
 // Endopoint number and size
 // **********************************************************************
-#define USB_DEVICE_EP_CTRL_SIZE 8
+#define USB_DEVICE_EP_CTRL_SIZE 64
 
 #define NEXT_IN_EPNUM_0 1
 #define NEXT_OUT_EPNUM_0 1
@@ -806,7 +806,8 @@ COMPILER_PACK_RESET()
 // HID LampArray Descriptor structure and content
 // **********************************************************************
 #ifdef HID_LAMPARRAY_ENABLE
-#define HID_LAMPARRAY_REPORT_SIZE 51 // extra byte for report ID
+#include "hid_lamparray.h"
+#define HID_LAMPARRAY_REPORT_SIZE sizeof(hid_lamparray_report_t) // extra byte for report ID
 #define HID_LAMPARRAY_DESC_SIZE 327
 
 COMPILER_PACK_SET(1)

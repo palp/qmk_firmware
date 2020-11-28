@@ -58,9 +58,6 @@ uint8_t rgb_matrix_map_keycode_to_led(uint8_t keycode, uint8_t *led_i) {
 
 void keyboard_post_init_user(void) {
     debug_enable=true;
-    rgb_matrix_disable_noeeprom();
-    rgb_matrix_set_color_all(255, 0, 0);
-    rgb_matrix_update_pwm_buffers();
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {
@@ -134,13 +131,6 @@ bool process_record_user(uint16_t keycode, keyrecord_t *record) {
             return false;
         default:
             return true; //Process all other keycodes normally
-    }
-}
-
-void hid_lamparray_recv(uint8_t *data, uint8_t length) {
-    while (length > 0) {
-        dprintf("%x", *(data++));
-        length--;
     }
 }
 

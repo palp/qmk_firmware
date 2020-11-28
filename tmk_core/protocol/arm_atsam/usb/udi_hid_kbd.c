@@ -891,6 +891,9 @@ COMPILER_WORD_ALIGNED
 static uint8_t udi_hid_lamparray_protocol;
 
 COMPILER_WORD_ALIGNED
+static uint8_t udi_hid_lamparray_report_index = 0;
+
+COMPILER_WORD_ALIGNED
 uint8_t udi_hid_lamparray_report_set[HID_LAMPARRAY_REPORT_SIZE];
 
 static bool udi_hid_lamparray_b_report_valid;
@@ -908,7 +911,7 @@ static uint8_t udi_hid_lamparray_report_recv[HID_LAMPARRAY_REPORT_SIZE];
 
 COMPILER_WORD_ALIGNED
 UDC_DESC_STORAGE udi_hid_lamparray_report_desc_t udi_hid_lamparray_report_desc = {{
-            0x05, 0x59, /* USAGE_PAGE (LightingAndIllumination) */
+            0x05, 0xFE, /* USAGE_PAGE (LightingAndIllumination) */
             0x09, 0x01, /* USAGE (LampArray) */
             0xa1, 0x01, /* COLLECTION (Application) */
             0x85, 0x01, /* REPORT_ID (1) */
@@ -1065,8 +1068,11 @@ UDC_DESC_STORAGE udi_hid_lamparray_report_desc_t udi_hid_lamparray_report_desc =
             0xc0 /* END_COLLECTION*/
             }};
 
+static uint8_t udi_hid_lamparray_report_size[6] = { sizeof(HID_LAMPARRAY_REPORT_1), sizeof(HID_LAMPARRAY_REPORT_2), sizeof(HID_LAMPARRAY_REPORT_3), sizeof(HID_LAMPARRAY_REPORT_4), sizeof(HID_LAMPARRAY_REPORT_5), sizeof(HID_LAMPARRAY_REPORT_6) } ;
+
 static bool udi_hid_lamparray_setreport(void);
 static void udi_hid_lamparray_setreport_valid(void);
+static void udi_hid_lamparray_getreport_valid(void);
 
 static void udi_hid_lamparray_report_sent(udd_ep_status_t status, iram_size_t nb_sent, udd_ep_id_t ep);
 static void udi_hid_lamparray_report_rcvd(udd_ep_status_t status, iram_size_t nb_rcvd, udd_ep_id_t ep);
@@ -1091,17 +1097,50 @@ uint8_t udi_hid_lamparray_getsetting(void) { return 0; }
 static bool udi_hid_lamparray_setreport(void) {
     if (Udd_setup_is_out()) {
         switch (udd_g_ctrlreq.req.wValue >> 8) {
-            case USB_HID_REPORT_TYPE_FEATURE:
-                if (HID_LAMPARRAY_REPORT_SIZE == udd_g_ctrlreq.req.wLength) {
+            case USB_HID_REPORT_TYPE_FEATURE: {
+                uint8_t report_id = (udd_g_ctrlreq.req.wValue & 0xFF);
+                if (report_id < 1 || report_id > HID_LAMPARRAY_REPORTS)
+                    return false;
+                if (udi_hid_lamparray_report_size[report_id-1] == udd_g_ctrlreq.req.wLength) {
                     udd_g_ctrlreq.payload = udi_hid_lamparray_report_set;
                     udd_g_ctrlreq.callback = udi_hid_lamparray_setreport_valid;
-                    udd_g_ctrlreq.payload_size = HID_LAMPARRAY_REPORT_SIZE;
+                    udd_g_ctrlreq.payload_size = udi_hid_lamparray_report_size[report_id-1];
                     return true;
                 }
+                default:
+                    return false;
+            }
+        }
+    } else {
+        switch (udd_g_ctrlreq.req.wValue >> 8) {
+            case USB_HID_REPORT_TYPE_FEATURE: {
+                uint8_t report_id = (udd_g_ctrlreq.req.wValue & 0xFF);
+                if (report_id < 1 || report_id > HID_LAMPARRAY_REPORTS)
+                    return false;
+                switch (report_id) {
+                    case 1:
+                        udd_g_ctrlreq.payload = hid_lamparray_attributes_report.raw;
+                        udd_g_ctrlreq.payload_size = udi_hid_lamparray_report_size[report_id-1];
+                        udd_g_ctrlreq.callback = udi_hid_lamparray_getreport_valid;
+                        return true;
+                    case 3:
+                        if (udi_hid_lamparray_report_index >= DRIVER_LED_TOTAL)
+                            udi_hid_lamparray_report_index = 0;
+                        get_lamp_attributes(udi_hid_lamparray_report_index++, udi_hid_lamparray_report);
+                        udd_g_ctrlreq.payload = udi_hid_lamparray_report;
+                        udd_g_ctrlreq.payload_size = udi_hid_lamparray_report_size[report_id-1];
+                        udd_g_ctrlreq.callback = udi_hid_lamparray_getreport_valid;
+                        return true;
+                    default:
+                        return false;
+                }
+            }
         }
     }
     return false;
 }
+
+static void udi_hid_lamparray_getreport_valid(void) {}
 
 bool udi_hid_lamparray_send_report(void) {
     if (!main_b_lamparray_enable) {
@@ -1130,7 +1169,11 @@ static void udi_hid_lamparray_report_sent(udd_ep_status_t status, iram_size_t nb
 }
 
 static void udi_hid_lamparray_setreport_valid(void) {
-    UDI_HID_LAMPARRAY_RECEIVE(udi_hid_lamparray_report_set, HID_LAMPARRAY_REPORT_SIZE);
+    if ((udd_g_ctrlreq.req.wValue & 0xFF) == 2) {
+        udi_hid_lamparray_report_index = udi_hid_lamparray_report_set[1];
+        return;
+    }
+    UDI_HID_LAMPARRAY_RECEIVE(udi_hid_lamparray_report_set, udd_g_ctrlreq.payload_size);
 }
 
 /*
