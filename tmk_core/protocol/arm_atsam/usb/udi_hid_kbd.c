@@ -901,20 +901,32 @@ static bool udi_hid_lamparray_b_report_valid;
 COMPILER_WORD_ALIGNED
 uint8_t udi_hid_lamparray_report[HID_LAMPARRAY_REPORT_SIZE];
 
-static bool udi_hid_lamparray_b_report_trans_ongoing;
+COMPILER_WORD_ALIGNED
+typedef union {
+    uint8_t raw[HID_LAMPARRAY_ATTRIBUTES_REPORT_SIZE];
+    hid_lamparray_attributes_report_t desc;
+} hid_lamparray_attributes_report_storage_t;
 
 COMPILER_WORD_ALIGNED
-static uint8_t udi_hid_lamparray_report_trans[HID_LAMPARRAY_REPORT_SIZE];
-
-COMPILER_WORD_ALIGNED
-static uint8_t udi_hid_lamparray_report_recv[HID_LAMPARRAY_REPORT_SIZE];
+hid_lamparray_attributes_report_storage_t hid_lamparray_attributes_report = {
+    .desc = {
+    .report_id = hid_lamparray_attributes_report_id,
+    .lamp_count = DRIVER_LED_TOTAL,
+    .bounding_box = {
+        .x = 322580,
+        .y = 111760,
+        .z = 31750
+    },
+    .array_kind = 0x01, // keyboard
+    .min_update_interval = (RGB_MATRIX_LED_FLUSH_LIMIT * 1000)
+}};
 
 COMPILER_WORD_ALIGNED
 UDC_DESC_STORAGE udi_hid_lamparray_report_desc_t udi_hid_lamparray_report_desc = {{
-            0x05, 0xFE, /* USAGE_PAGE (LightingAndIllumination) */
+            0x05, 0x59, /* USAGE_PAGE (LightingAndIllumination) */
             0x09, 0x01, /* USAGE (LampArray) */
             0xa1, 0x01, /* COLLECTION (Application) */
-            0x85, 0x01, /* REPORT_ID (1) */
+            0x85, hid_lamparray_attributes_report_id, /* REPORT_ID (1) */
             0x09, 0x02, /* USAGE (LampArrayAttributesReport) */
             0xa1, 0x02, /* COLLECTION (Logical) */
             0x09, 0x03, /* USAGE (LampCount) */
@@ -934,7 +946,7 @@ UDC_DESC_STORAGE udi_hid_lamparray_report_desc_t udi_hid_lamparray_report_desc =
             0x95, 0x05, /* REPORT_COUNT (5) */
             0xb1, 0x03, /* FEATURE (Cnst,Var,Abs) */
             0xc0, /* END_COLLECTION*/
-            0x85, 0x02, /* REPORT_ID (2) */
+            0x85, hid_lamparray_attributes_request_report_id, /* REPORT_ID (2) */
             0x09, 0x20, /* USAGE (LampAttributesRequestReport) */
             0xa1, 0x02, /* COLLECTION (Logical) */
             0x09, 0x21, /* USAGE (LampId) */
@@ -944,7 +956,7 @@ UDC_DESC_STORAGE udi_hid_lamparray_report_desc_t udi_hid_lamparray_report_desc =
             0x95, 0x01, /* REPORT_COUNT (1) */
             0xb1, 0x02, /* FEATURE (Data,Var,Abs) */
             0xc0, /* END_COLLECTION*/
-            0x85, 0x03, /* REPORT_ID (3) */
+            0x85, hid_lamparray_attributes_response_report_id, /* REPORT_ID (3) */
             0x09, 0x22, /* USAGE (LampAttributesReponseReport) */
             0xa1, 0x02, /* COLLECTION (Logical) */
             0x09, 0x21, /* USAGE (LampId) */
@@ -975,7 +987,7 @@ UDC_DESC_STORAGE udi_hid_lamparray_report_desc_t udi_hid_lamparray_report_desc =
             0x95, 0x06, /* REPORT_COUNT (6) */
             0xb1, 0x02, /* FEATURE (Data,Var,Abs) */
             0xc0, /* END_COLLECTION*/
-            0x85, 0x04, /* REPORT_ID (4) */
+            0x85, hid_lamparray_multi_update_report_id, /* REPORT_ID (4) */
             0x09, 0x50, /* USAGE (LampMultiUpdateReport) */
             0xa1, 0x02, /* COLLECTION (Logical) */
             0x09, 0x03, /* USAGE (LampCount) */
@@ -1029,7 +1041,7 @@ UDC_DESC_STORAGE udi_hid_lamparray_report_desc_t udi_hid_lamparray_report_desc =
             0x95, 0x20, /* REPORT_COUNT (32) */
             0xb1, 0x02, /* FEATURE (Data,Var,Abs) */
             0xc0, /* END_COLLECTION*/
-            0x85, 0x05, /* REPORT_ID (5) */
+            0x85, hid_lamparray_range_update_report_id, /* REPORT_ID (5) */
             0x09, 0x60, /* USAGE (LampRangeUpdateReport) */
             0xa1, 0x02, /* COLLECTION (Logical) */
             0x09, 0x55, /* USAGE (LampUpdateFlags) */
@@ -1055,7 +1067,7 @@ UDC_DESC_STORAGE udi_hid_lamparray_report_desc_t udi_hid_lamparray_report_desc =
             0x95, 0x04, /* REPORT_COUNT (4) */
             0xb1, 0x02, /* FEATURE (Data,Var,Abs) */
             0xc0, /* END_COLLECTION*/
-            0x85, 0x06, /* REPORT_ID (6) */
+            0x85, hid_lamparray_control_report_id, /* REPORT_ID (6) */
             0x09, 0x70, /* USAGE (LampArrayControlReport) */
             0xa1, 0x02, /* COLLECTION (Logical) */
             0x09, 0x71, /* USAGE (AutonomousMode) */
@@ -1068,20 +1080,22 @@ UDC_DESC_STORAGE udi_hid_lamparray_report_desc_t udi_hid_lamparray_report_desc =
             0xc0 /* END_COLLECTION*/
             }};
 
-static uint8_t udi_hid_lamparray_report_size[6] = { sizeof(HID_LAMPARRAY_REPORT_1), sizeof(HID_LAMPARRAY_REPORT_2), sizeof(HID_LAMPARRAY_REPORT_3), sizeof(HID_LAMPARRAY_REPORT_4), sizeof(HID_LAMPARRAY_REPORT_5), sizeof(HID_LAMPARRAY_REPORT_6) } ;
+static uint8_t udi_hid_lamparray_report_size[6] = {
+    sizeof(HID_LAMPARRAY_REPORT_1),
+    sizeof(HID_LAMPARRAY_REPORT_2),
+    sizeof(HID_LAMPARRAY_REPORT_3),
+    sizeof(HID_LAMPARRAY_REPORT_4),
+    sizeof(HID_LAMPARRAY_REPORT_5),
+    sizeof(HID_LAMPARRAY_REPORT_6) } ;
 
 static bool udi_hid_lamparray_setreport(void);
 static void udi_hid_lamparray_setreport_valid(void);
 static void udi_hid_lamparray_getreport_valid(void);
 
-static void udi_hid_lamparray_report_sent(udd_ep_status_t status, iram_size_t nb_sent, udd_ep_id_t ep);
-static void udi_hid_lamparray_report_rcvd(udd_ep_status_t status, iram_size_t nb_rcvd, udd_ep_id_t ep);
-
 bool udi_hid_lamparray_enable(void) {
     // Initialize internal values
     udi_hid_lamparray_rate                   = 0;
     udi_hid_lamparray_protocol               = 0;
-    udi_hid_lamparray_b_report_trans_ongoing = false;
     memset(udi_hid_lamparray_report, 0, HID_LAMPARRAY_REPORT_SIZE);
     memset(udi_hid_lamparray_report_set, 0, HID_LAMPARRAY_REPORT_SIZE);
     udi_hid_lamparray_b_report_valid = false;
@@ -1101,7 +1115,7 @@ static bool udi_hid_lamparray_setreport(void) {
                 uint8_t report_id = (udd_g_ctrlreq.req.wValue & 0xFF);
                 if (report_id < 1 || report_id > HID_LAMPARRAY_REPORTS)
                     return false;
-                if (udi_hid_lamparray_report_size[report_id-1] == udd_g_ctrlreq.req.wLength) {
+                if (udi_hid_lamparray_report_size[report_id-1] <= udd_g_ctrlreq.req.wLength) {
                     udd_g_ctrlreq.payload = udi_hid_lamparray_report_set;
                     udd_g_ctrlreq.callback = udi_hid_lamparray_setreport_valid;
                     udd_g_ctrlreq.payload_size = udi_hid_lamparray_report_size[report_id-1];
@@ -1120,15 +1134,16 @@ static bool udi_hid_lamparray_setreport(void) {
                 switch (report_id) {
                     case 1:
                         udd_g_ctrlreq.payload = hid_lamparray_attributes_report.raw;
-                        udd_g_ctrlreq.payload_size = udi_hid_lamparray_report_size[report_id-1];
+                        udd_g_ctrlreq.payload_size = HID_LAMPARRAY_ATTRIBUTES_REPORT_SIZE;
                         udd_g_ctrlreq.callback = udi_hid_lamparray_getreport_valid;
                         return true;
                     case 3:
                         if (udi_hid_lamparray_report_index >= DRIVER_LED_TOTAL)
                             udi_hid_lamparray_report_index = 0;
+                        memset(udi_hid_lamparray_report, 0, HID_LAMPARRAY_REPORT_SIZE);
                         get_lamp_attributes(udi_hid_lamparray_report_index++, udi_hid_lamparray_report);
                         udd_g_ctrlreq.payload = udi_hid_lamparray_report;
-                        udd_g_ctrlreq.payload_size = udi_hid_lamparray_report_size[report_id-1];
+                        udd_g_ctrlreq.payload_size = HID_LAMPARRAY_ATTRIBUTES_RESPONSE_REPORT_SIZE;
                         udd_g_ctrlreq.callback = udi_hid_lamparray_getreport_valid;
                         return true;
                     default:
@@ -1142,63 +1157,12 @@ static bool udi_hid_lamparray_setreport(void) {
 
 static void udi_hid_lamparray_getreport_valid(void) {}
 
-bool udi_hid_lamparray_send_report(void) {
-    if (!main_b_lamparray_enable) {
-        return false;
-    }
-
-    if (udi_hid_lamparray_b_report_trans_ongoing) {
-        return false;
-    }
-
-    memcpy(udi_hid_lamparray_report_trans, udi_hid_lamparray_report, HID_LAMPARRAY_REPORT_SIZE);
-    udi_hid_lamparray_b_report_valid         = false;
-    udi_hid_lamparray_b_report_trans_ongoing = udd_ep_run(UDI_HID_LAMPARRAY_EP_IN | USB_EP_DIR_IN, false, udi_hid_lamparray_report_trans, HID_LAMPARRAY_REPORT_SIZE, udi_hid_lamparray_report_sent);
-
-    return udi_hid_lamparray_b_report_trans_ongoing;
-}
-
-static void udi_hid_lamparray_report_sent(udd_ep_status_t status, iram_size_t nb_sent, udd_ep_id_t ep) {
-    UNUSED(status);
-    UNUSED(nb_sent);
-    UNUSED(ep);
-    udi_hid_lamparray_b_report_trans_ongoing = false;
-    if (udi_hid_lamparray_b_report_valid) {
-        udi_hid_lamparray_send_report();
-    }
-}
-
 static void udi_hid_lamparray_setreport_valid(void) {
-    if ((udd_g_ctrlreq.req.wValue & 0xFF) == 2) {
+    if (udi_hid_lamparray_report_set[0] == 2) {
         udi_hid_lamparray_report_index = udi_hid_lamparray_report_set[1];
         return;
     }
     UDI_HID_LAMPARRAY_RECEIVE(udi_hid_lamparray_report_set, udd_g_ctrlreq.payload_size);
-}
-
-/*
-void raw_hid_send(uint8_t *data, uint8_t length) {
-    if (main_b_lamparray_enable && !udi_hid_lamparray_b_report_trans_ongoing && length == HID_LAMPARRAY_REPORT_SIZE) {
-        memcpy(udi_hid_lamparray_report, data, HID_LAMPARRAY_REPORT_SIZE);
-        udi_hid_lamparray_send_report();
-    }
-}
-*/
-
-bool udi_hid_lamparray_receive_report(void) {
-    if (!main_b_lamparray_enable) {
-        return false;
-    }
-
-    return udd_ep_run(UDI_HID_LAMPARRAY_EP_OUT | USB_EP_DIR_OUT, false, udi_hid_lamparray_report_recv, HID_LAMPARRAY_REPORT_SIZE, udi_hid_lamparray_report_rcvd);
-}
-
-static void udi_hid_lamparray_report_rcvd(udd_ep_status_t status, iram_size_t nb_rcvd, udd_ep_id_t ep) {
-    UNUSED(ep);
-
-    if (status == UDD_EP_TRANSFER_OK) {
-        UDI_HID_LAMPARRAY_RECEIVE(udi_hid_lamparray_report_recv, nb_rcvd);
-    }
 }
 
 #endif // HID_LAMPARRAY_ENABLE

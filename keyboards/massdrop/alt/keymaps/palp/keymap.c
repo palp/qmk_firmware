@@ -58,6 +58,7 @@ uint8_t rgb_matrix_map_keycode_to_led(uint8_t keycode, uint8_t *led_i) {
 
 void keyboard_post_init_user(void) {
     debug_enable=true;
+    rgb_matrix_disable_noeeprom();
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {

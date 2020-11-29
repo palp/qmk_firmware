@@ -1,19 +1,8 @@
+#ifdef HID_LAMPARRAY_ENABLE
 #include "hid_lamparray.h"
 #include "led_matrix.h"
 
 bool hid_lamparray_auto_mode = true;
-
-hid_lamparray_attributes_report_storage_t hid_lamparray_attributes_report = { .desc = {
-    .report_id = hid_lamparray_attributes_report_id,
-    .lamp_count = DRIVER_LED_TOTAL,
-    .bounding_box = {
-        .x = 322580,
-        .y = 111760,
-        .z = 31750
-    },
-    .array_kind = 0x01, // keyboard
-    .min_update_interval = (RGB_MATRIX_LED_FLUSH_LIMIT * 1000)
-}};
 
 uint8_t get_led_binding(uint8_t lamp_id) {
     for (int col = 0; col <= MATRIX_COLS; col++) {
@@ -71,15 +60,15 @@ void hid_lamparray_recv(uint8_t *data, uint8_t length) {
         case hid_lamparray_control_report_id: {
             hid_lamparray_control_report_t *report = (hid_lamparray_control_report_t *)data;
             if (hid_lamparray_auto_mode && report->autonomous_mode == 0) {
+                //rgb_matrix_disable_noeeprom();
+                //wait_ms(RGB_MATRIX_LED_FLUSH_LIMIT*2);
                 hid_lamparray_auto_mode = false;
-                rgb_matrix_disable_noeeprom();
-                rgb_matrix_set_color_all(0,0,0);
-                rgb_matrix_update_pwm_buffers();
             } else if (!hid_lamparray_auto_mode && report->autonomous_mode == 1) {
+                //rgb_matrix_enable_noeeprom();
                 hid_lamparray_auto_mode = true;
-                rgb_matrix_enable_noeeprom();
             }
         break;
         }
     };
 }
+#endif

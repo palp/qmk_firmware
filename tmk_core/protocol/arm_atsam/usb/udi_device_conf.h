@@ -807,7 +807,7 @@ COMPILER_PACK_RESET()
 // **********************************************************************
 #ifdef HID_LAMPARRAY_ENABLE
 #include "hid_lamparray.h"
-#define HID_LAMPARRAY_REPORT_SIZE sizeof(hid_lamparray_report_t) // extra byte for report ID
+#define HID_LAMPARRAY_REPORT_SIZE 51 // extra byte for report ID
 #define HID_LAMPARRAY_DESC_SIZE 327
 
 COMPILER_PACK_SET(1)

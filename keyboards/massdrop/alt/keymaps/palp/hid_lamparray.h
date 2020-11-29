@@ -25,13 +25,13 @@ typedef struct {
     uint8_t     green;
     uint8_t     blue;
     uint8_t     intensity;
-} hid_lamparray_color_t;
+} __attribute__((packed, aligned(1))) hid_lamparray_color_t;
 
 typedef struct {
     uint32_t    x;
     uint32_t    y;
     uint32_t    z;
-} hid_lamparray_position_t;
+} __attribute__((packed, aligned(1))) hid_lamparray_position_t;
 
 typedef struct {
     uint8_t     report_id;
@@ -39,13 +39,13 @@ typedef struct {
     hid_lamparray_position_t bounding_box;
     uint32_t    array_kind;
     uint32_t    min_update_interval;
-} hid_lamparray_attributes_report_t;
+} __attribute__((packed, aligned(1))) hid_lamparray_attributes_report_t;
 #define HID_LAMPARRAY_ATTRIBUTES_REPORT_SIZE sizeof(hid_lamparray_attributes_report_t)
 
 typedef struct {
     uint8_t     report_id;
     uint16_t    lamp_id;
-} hid_lamparray_attributes_request_report_t;
+} __attribute__((packed, aligned(1))) hid_lamparray_attributes_request_report_t;
 #define HID_LAMPARRAY_ATTRIBUTES_REQUEST_REPORT_SIZE sizeof(hid_lamparray_attributes_request_report_t)
 
 typedef struct {
@@ -57,7 +57,7 @@ typedef struct {
     hid_lamparray_color_t level_counts;
     uint8_t    is_programmable;
     uint8_t    input_binding;
-} hid_lamparray_attributes_response_report_t;
+} __attribute__((packed, aligned(1))) hid_lamparray_attributes_response_report_t;
 #define HID_LAMPARRAY_ATTRIBUTES_RESPONSE_REPORT_SIZE sizeof(hid_lamparray_attributes_response_report_t)
 
 typedef struct {
@@ -66,7 +66,7 @@ typedef struct {
     uint8_t             flags;
     uint16_t            lamp_ids[8];
     hid_lamparray_color_t     colors[8];
-} hid_lamparray_multi_update_report_t;
+} __attribute__((packed, aligned(1))) hid_lamparray_multi_update_report_t;
 #define HID_LAMPARRAY_MULTI_UPDATE_REPORT_SIZE sizeof(hid_lamparray_multi_update_report_t)
 
 typedef struct {
@@ -75,41 +75,23 @@ typedef struct {
     uint16_t    lamp_id_start;
     uint16_t    lamp_id_end;
     hid_lamparray_color_t color;
-} hid_lamparray_range_update_report_t;
+} __attribute__((packed, aligned(1))) hid_lamparray_range_update_report_t;
 #define HID_LAMPARRAY_RANGE_UPDATE_REPORT_SIZE sizeof(hid_lamparray_range_update_report_t)
 
 typedef struct {
     uint8_t     report_id;
     uint8_t     autonomous_mode;
-} hid_lamparray_control_report_t;
+} __attribute__((packed, aligned(1))) hid_lamparray_control_report_t;
 #define HID_LAMPARRAY_CONTROL_REPORT_SIZE sizeof(hid_lamparray_control_report_t)
-
-
-typedef union {
-    uint8_t     report_id;
-    hid_lamparray_attributes_report_t attributes;
-    hid_lamparray_attributes_request_report_t attributes_request;
-    hid_lamparray_attributes_response_report_t attributes_response;
-    hid_lamparray_multi_update_report_t multi_update;
-    hid_lamparray_range_update_report_t range_update;
-    hid_lamparray_control_report_t control_report;
-} hid_lamparray_report_t;
-
-typedef union {
-    uint8_t raw[HID_LAMPARRAY_ATTRIBUTES_REPORT_SIZE];
-    hid_lamparray_attributes_report_t desc;
-} hid_lamparray_attributes_report_storage_t;
 
 typedef union {
     uint8_t raw[HID_LAMPARRAY_ATTRIBUTES_RESPONSE_REPORT_SIZE];
     hid_lamparray_attributes_response_report_t desc;
-} hid_lamparray_attributes_response_report_storage_t;
+} __attribute__((packed, aligned(1))) hid_lamparray_attributes_response_report_storage_t;
 
 void hid_lamparray_recv(uint8_t *data, uint8_t length);
 void get_lamp_attributes(uint8_t lamp_id, uint8_t *responseBuffer);
 extern bool hid_lamparray_auto_mode;
-extern hid_lamparray_attributes_report_storage_t hid_lamparray_attributes_report;
-
 
 #define HID_LAMPARRAY_DESC { \
             0x05, 0x59, /* USAGE_PAGE (LightingAndIllumination) */ \
