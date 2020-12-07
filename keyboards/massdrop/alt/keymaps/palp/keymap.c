@@ -50,15 +50,15 @@ uint8_t rgb_matrix_map_keycode_to_led(uint8_t keycode, uint8_t *led_i) {
     return count;
 }
 
-
-
 #define MODS_SHIFT  (get_mods() & MOD_BIT(KC_LSHIFT) || get_mods() & MOD_BIT(KC_RSHIFT))
 #define MODS_CTRL  (get_mods() & MOD_BIT(KC_LCTL) || get_mods() & MOD_BIT(KC_RCTRL))
 #define MODS_ALT  (get_mods() & MOD_BIT(KC_LALT) || get_mods() & MOD_BIT(KC_RALT))
 
 void keyboard_post_init_user(void) {
-    debug_enable=true;
     rgb_matrix_disable_noeeprom();
+    rgb_matrix_set_color_all(255,0,0);
+    rgb_matrix_update_pwm_buffers();
+    map_keybindings();
 }
 
 bool process_record_user(uint16_t keycode, keyrecord_t *record) {

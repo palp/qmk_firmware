@@ -922,6 +922,35 @@ hid_lamparray_attributes_report_storage_t hid_lamparray_attributes_report = {
 }};
 
 COMPILER_WORD_ALIGNED
+typedef union {
+    uint8_t raw[HID_LAMPARRAY_ATTRIBUTES_RESPONSE_REPORT_SIZE];
+    hid_lamparray_attributes_response_report_t desc;
+} hid_lamparray_attributes_response_report_storage_t;
+
+COMPILER_WORD_ALIGNED
+hid_lamparray_attributes_response_report_storage_t hid_lamparray_attributes_response_report = {
+    .desc = {
+        .report_id = hid_lamparray_attributes_response_report_id,
+        .lamp_id = 0x0000,
+        .position = {
+            .x = 0x00000000,
+            .y = 0x00000000,
+            .z = 0x000000FF,
+        },
+        .update_latency = (RGB_MATRIX_LED_FLUSH_LIMIT * 1000),
+        .lamp_purposes = 0x00000001,
+        .level_counts = {
+            .red = 0xFF,
+            .green = 0xFF,
+            .blue = 0xFF,
+            .intensity = 0x01
+        },
+        .is_programmable = 0x01,
+        .input_binding = 0x00
+    }
+};
+
+COMPILER_WORD_ALIGNED
 UDC_DESC_STORAGE udi_hid_lamparray_report_desc_t udi_hid_lamparray_report_desc = {{
             0x05, 0x59, /* USAGE_PAGE (LightingAndIllumination) */
             0x09, 0x01, /* USAGE (LampArray) */
@@ -1140,11 +1169,12 @@ static bool udi_hid_lamparray_setreport(void) {
                     case 3:
                         if (udi_hid_lamparray_report_index >= DRIVER_LED_TOTAL)
                             udi_hid_lamparray_report_index = 0;
-                        memset(udi_hid_lamparray_report, 0, HID_LAMPARRAY_REPORT_SIZE);
-                        get_lamp_attributes(udi_hid_lamparray_report_index++, udi_hid_lamparray_report);
-                        udd_g_ctrlreq.payload = udi_hid_lamparray_report;
+                        hid_lamparray_attributes_response_report.desc.lamp_id = udi_hid_lamparray_report_index;
+                        fill_lamp_attributes(&hid_lamparray_attributes_response_report.desc);
+                        udd_g_ctrlreq.payload = hid_lamparray_attributes_response_report.raw;
                         udd_g_ctrlreq.payload_size = HID_LAMPARRAY_ATTRIBUTES_RESPONSE_REPORT_SIZE;
                         udd_g_ctrlreq.callback = udi_hid_lamparray_getreport_valid;
+                        udi_hid_lamparray_report_index++;
                         return true;
                     default:
                         return false;
